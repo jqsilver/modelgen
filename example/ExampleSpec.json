@@ -1,0 +1,8 @@
+{
+    "class_type" : "class",
+    "classname" : "Example",
+    "properties" : [
+	["myDouble", "Double"],
+	["myString", "String"]
+    ]
+}
