@@ -1,8 +1,4 @@
 {
-    "classname" : "Example",
-    "class_type" : "class",
-    "properties" : [
-	["myDouble", "Double"],
-	["myName", "String"]
-    ],
-}
+    "my_double" : "myDouble",
+    "my_string" : "myString"
+ }
