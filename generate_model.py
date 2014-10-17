@@ -1,20 +1,12 @@
 #!/bin/python
 import json
+import jinja2
+import string
 
-
-def printClass(class_json):
-    props = class_json["properties"]
-    print class_json["class_type"] + " " + class_json["classname"] + " {"
-    for property in props.items():
-        print "\tvar " + property[0] + ": " + property[1]
-
-    init_args = [property[0] + ": " + property[1] for property in props.items()]
-    print "\tinit("+", ".join(init_args)+") {"
-    for prop_name in props.keys():
-        print "\t\tself."+prop_name+" = "+prop_name
-    print "\t}"
-    
-    print "}"
+def getTemplate(name):
+    loader = jinja2.FileSystemLoader(searchpath="./templates")
+    env = jinja2.Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
+    return env.get_template(name)
 
 def validateMapping(class_json, json_to_property):
     mapped_properties = json_to_property.values()
@@ -23,7 +15,6 @@ def validateMapping(class_json, json_to_property):
             print "// missing "+prop_name
             return False
     return True
-
 
 def printDeserializer(class_json, json_key_to_property):
     classname = class_json["classname"]
@@ -55,8 +46,24 @@ json_key_to_property = json.loads(raw_mapping_string)
 if not validateMapping(example_json, json_key_to_property):
     print "// Missing required properties in mapping"
 
-print "import Foundation"
-print
-printClass(example_json)
-print
-printDeserializer(example_json, json_key_to_property)
+template = getTemplate('class.swift')
+
+# TODO: figure out how to do this in Jinja instead
+example_json['arg_list'] = ", ".join([prop_name+": "+prop_type for prop_name, prop_type in example_json['properties'].items()])
+
+
+def args_with_cast(properties, json_mapping):
+    result_arr = []
+    for json_key, prop_name in json_mapping.items():
+        arg_with_cast = '{0}: json["{1}"] as {2}'.format(prop_name, json_key, properties[prop_name])
+        result_arr.append(arg_with_cast)
+    return ", ".join(result_arr)
+
+example_json['init_args_with_casts'] = args_with_cast(example_json["properties"], json_key_to_property)
+
+example_json['json_mapping'] = json_key_to_property
+
+print template.render(example_json)
+
+
+# just had this crazy idea that could curry the initializer
