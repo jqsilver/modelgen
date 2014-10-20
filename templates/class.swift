@@ -1,3 +1,5 @@
+
+
 import Foundation
 
 class {{classname}} {
@@ -5,7 +7,7 @@ class {{classname}} {
     	var {{prop_name}}: {{prop_type}}
     {% endfor %} 
 
-    init({{arg_list}}) {
+    init({{ properties.items()|map('formatForArgument')|join(", ")}}) {
     {% for prop_name in properties.keys() %}
     	self.{{prop_name}} = {{prop_name}}
     {% endfor %} 
@@ -13,7 +15,7 @@ class {{classname}} {
 
     class func fromJSON(json: NSDictionary) -> ({{classname}}?, NSError?) {
        	// validate keys
-	    {% for json_key, prop_name in json_mapping.items() %}
+	    {% for json_key, prop_name in json_key_to_property.items() %}
     	{% set prop_type = properties[prop_name] %}
     	if !(json["{{ json_key }}"] is {{prop_type}}) {
     		let userInfo = ["reason": "{{json_key}} is not {{prop_type}}"]
@@ -21,7 +23,11 @@ class {{classname}} {
     		return (nil, e)
     	}
 	    {% endfor %} 
-	    return ({{classname}}({{init_args_with_casts}}), nil)
+
+        // Use keys with unsafe cast
+        return ({{classname}}(
+           {{json_key_to_property.items()|map('formatForArgumentWithCast')|join(", ")}}
+        ), nil)
     }
 }
 
