@@ -1,5 +1,3 @@
-
-
 import Foundation
 
 class {{classname}} {
@@ -28,6 +26,14 @@ class {{classname}} {
         return ({{classname}}(
            {{json_key_to_property.items()|map('formatForArgumentWithCast')|join(", ")}}
         ), nil)
+    }
+
+    func toJSON() -> NSDictionary {
+        return [
+            {% for json_key, prop_name in json_key_to_property.items() %}
+            "{{json_key}}": self.{{prop_name}},
+            {% endfor %}
+        ];
     }
 }
 
